@@ -39,7 +39,7 @@ vault write auth/kubernetes/role/app1 \
 
 # deploy app
 kubectl apply -f service-account-app1.yml
-kubectl apply -f deployment-app1.yml
+kubectl apply -f file-deployment.yml
 
 kubectl exec \
     $(kubectl get pod -l app=app1 -o jsonpath="{.items[0].metadata.name}") \
@@ -61,7 +61,7 @@ vault write auth/kubernetes/role/app2 \
 
 # deploy app2
 kubectl apply -f service-account-app2.yml
-kubectl apply -f deployment-app2.yml
+kubectl apply -f env-deployment.yml
 
 kubectl exec \
     $(kubectl get pod -l app=app2 -o jsonpath="{.items[0].metadata.name}") \
