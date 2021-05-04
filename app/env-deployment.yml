@@ -25,8 +25,7 @@ spec:
     spec:
       serviceAccountName: app2
       containers:
-        - name: app2
-          image: jweissig/app:0.0.1
-          #command: ["sh"]
-          args:
-            ["/bin/sh", "-c", "source /vault/secrets/config"]
+      - name: app2
+        image: alpine:latest
+        args:
+          ["sh", "-c", "source /vault/secrets/config && sleep 1000"]

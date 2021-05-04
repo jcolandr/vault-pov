@@ -13,7 +13,7 @@ spec:
     metadata:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/namespace: "admin"
+        #vault.hashicorp.com/namespace: "admin"
         vault.hashicorp.com/role: "app1"
         vault.hashicorp.com/agent-inject-secret-app1-config.txt: "secret/data/app1/config"
         vault.hashicorp.com/agent-inject-template-app1-config.txt: |
