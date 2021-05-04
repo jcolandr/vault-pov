@@ -65,6 +65,8 @@ kubectl apply -f env-deployment.yml
 
 kubectl exec \
     $(kubectl get pod -l app=app2 -o jsonpath="{.items[0].metadata.name}") \
-    --container app2 -- env
+    --container app2 -- printenv RESULT
 
 kubectl exec -it $(kubectl get pod -l app=app2 -o jsonpath="{.items[0].metadata.name}") --container app2 -- /bin/sh
+
+kubectl logs $(kubectl get pod -l app=app2 -o jsonpath="{.items[0].metadata.name}") app2

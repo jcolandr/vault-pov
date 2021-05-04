@@ -28,4 +28,4 @@ spec:
       - name: app2
         image: alpine:latest
         args:
-          ["sh", "-c", "source /vault/secrets/config && sleep 1000"]
+          ["sh", "-c", "source /vault/secrets/config && echo $RESULT"]
