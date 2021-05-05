@@ -91,10 +91,3 @@ EOF
 sudo systemctl enable vault.service
 sudo systemctl start vault.service
 
-#initialize and unseal and license vault
-# export VAULT_ADDR="http://127.0.0.1:8200"
-vault operator init -n=1 -t=1 > key.txt
-vault operator unseal $(grep 'Unseal Key 1:' key.txt | awk '{print $NF}')
-vault login $(grep 'Initial Root Token:' key.txt | awk '{print $NF}')
-vault write sys/license text=@vault.hclic
-
