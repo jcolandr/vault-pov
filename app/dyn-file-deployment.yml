@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app4
+  labels:
+    app: app4
+spec:
+  selector:
+    matchLabels:
+      app: app4
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        #vault.hashicorp.com/namespace: "admin"
+        vault.hashicorp.com/role: "app4"
+        vault.hashicorp.com/agent-inject-secret-app4-config.txt: "database/creds/readonly"
+        vault.hashicorp.com/agent-inject-template-app4-config.txt: |
+          {{- with secret "database/creds/readonly" -}}
+          postgresql://{{ .Data.username }}:{{ .Data.password }}@postgres:5432/wizard
+          {{- end -}}
+      labels:
+        app: app4
+    spec:
+      serviceAccountName: app4
+      containers:
+        - name: app4
+          image: jweissig/app:0.0.1

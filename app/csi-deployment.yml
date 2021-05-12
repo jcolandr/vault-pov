@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app3
+  labels:
+    app: app3
+spec:
+  selector:
+    matchLabels:
+      app: app3
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: app3
+    spec:
+      serviceAccountName: csi
+      containers:
+      - image: jweissig/app:0.0.1
+        name: app3
+        env:
+        # - name: DB_USERNAME
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: vault-db-creds-secret
+        #       key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vault-db-creds-secret
+              key: password
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "vault-database"
