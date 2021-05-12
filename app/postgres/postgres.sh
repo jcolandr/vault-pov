@@ -33,8 +33,8 @@ EOF
 vault write database/roles/readonly \
       db_name=postgresql \
       creation_statements=@readonly.sql \
-      default_ttl=1h \
-      max_ttl=24h
+      default_ttl=2m \
+      max_ttl=2m
 
 
 PGPASSWORD="$POSTGRES_PASSWORD" psql --host $SERVICE_IP --port 5432 -U postgres -d postgres
