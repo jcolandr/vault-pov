@@ -10,7 +10,9 @@ vault auth enable kubernetes
 # install agent injector service via helm 
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm install vault hashicorp/vault \
-    --set "injector.externalVaultAddr=$VAULT_ADDR"
+    --set "injector.externalVaultAddr=$VAULT_ADDR" \
+    --set "csi.enabled=true" \
+    --set "global.openshift=true"
 
 
 # determine vault service account JWT token
