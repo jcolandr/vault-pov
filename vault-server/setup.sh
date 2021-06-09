@@ -3,10 +3,10 @@
 # initialize and unseal and license vault
 # need VAULT_ADDR env variable set to vault server address
 # export VAULT_ADDR=<vault-address-and-port>
-# vault operator init -n=1 -t=1 > key.txt
-# vault operator unseal $(grep 'Unseal Key 1:' key.txt | awk '{print $NF}')
-# vault login $(grep 'Initial Root Token:' key.txt | awk '{print $NF}')
-# vault write sys/license text=@vault.hclic
+vault operator init -n=1 -t=1 > key.txt
+vault operator unseal $(grep 'Unseal Key 1:' key.txt | awk '{print $NF}')
+vault login $(grep 'Initial Root Token:' key.txt | awk '{print $NF}')
+vault write sys/license text=@vault.hclic
 
 
 # Create admin policy
@@ -38,6 +38,18 @@ path "auth/*"
 {
   capabilities = ["create", "read", "update", "delete", "list", "sudo"]
 }
+
+# Configure the azure secrets engine and create roles
+path "azure/*" {
+  capabilities = [ "create", "read", "update", "delete", "list" ]
+}
+
+# List, create, update, and delete database secrets
+path "database/*"
+{
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+
 
 # Create, update, and delete auth methods
 path "sys/auth/*"
