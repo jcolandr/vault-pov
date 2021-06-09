@@ -28,7 +28,7 @@ resource "azurerm_virtual_network" "myvaultnetwork" {
 
 # Create subnet
 resource "azurerm_subnet" "myvaultsubnet" {
-    name                 = "mySubnet"
+    name                 = "mySubnet1"
     resource_group_name  = azurerm_resource_group.myvaultgroup.name
     virtual_network_name = azurerm_virtual_network.myvaultnetwork.name
     address_prefixes       = ["10.0.1.0/24"]
