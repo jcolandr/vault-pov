@@ -137,22 +137,100 @@ display the password secret written to the file system at `/mnt/secrets-store/db
         --container app3 -- printenv
 
 
-# dynamic postgres credential example
+# Simple App Retriving Dynamic Postgres Secrets
 
-create the role for app4 and apply the kubernetes files. these are the same as app1 just the vault path is different to reflect the database secrets engine
+### Deploy App
 
-    vault write auth/kubernetes/role/app4 \
-            bound_service_account_names=app4 \
-            bound_service_account_namespaces=default \
-            policies=app1 \
-            ttl=24h
+```
+$ kubectl apply -f app-db.yaml
+```
 
-    kubectl apply -f service-account-app4.yml
-    kubectl apply -f dyn-file-deployment.yml 
+### Need to create this ro role
+```
+$ DB_POD=$(kubectl get pod -l app=db -n vault-demo -o jsonpath="{.items[0].metadata.name}")
+$ k exec -it $DB_POD -n vault-demo -- psql -U postgres -d postgres -p 5432
+```
 
-check the rendered config file within the pod at `/vault/secrets/app4-config.txt` if the DB credentials are rotated by vault this file will change as the lease on those credentials expires
+### Create a ro user
+```
+CREATE ROLE ro NOINHERIT;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO "ro";
+\q
+```
+### (Optional) Create Vault specific Role
+```
+CREATE ROLE "vault" WITH LOGIN PASSWORD 'mypassword';
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "vault";
+```
 
-    kubectl exec \
-        $(kubectl get pod -l app=app4 -o jsonpath="{.items[0].metadata.name}") \
-        --container app4 -- cat /vault/secrets/app4-config.txt ; echo
+### DB Creds
+```
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=postgres
+export SERVICE_IP=$(kubectl get svc --namespace vault-demo db -o jsonpath='{.spec.clusterIP}')
+```
+### Enabling Database Secret Engine
 
+```
+vault secrets enable -path db database
+```
+
+### DB Config
+```
+vault write db/config/postgres \
+     plugin_name=postgresql-database-plugin \
+     connection_url="postgresql://{{username}}:{{password}}@$SERVICE_IP:5432/postgres?sslmode=disable" \
+     allowed_roles=readonly \
+     username="$POSTGRES_USER" \
+     password="$POSTGRES_PASSWORD"
+```
+
+### (Optional) Rotating Vault Root PW
+```
+vault write -force db/rotate-root/postgres
+```
+
+### Vault DB Role
+```
+vault write db/roles/readonly \
+      db_name=postgres \
+      creation_statements=@readonly.sql \
+      default_ttl=2m \
+      max_ttl=2m
+```
+
+### Policy to allow app to access path
+
+```
+vault policy write app - <<EOF
+path "db/creds/readonly" {
+    capabilities = ["read"]
+}
+EOF
+```
+
+### Aligning k8s role to policy
+
+```
+vault write auth/kubernetes/role/app \
+        bound_service_account_names=demo-sa \
+        bound_service_account_namespaces=vault-demo \
+        policies=app \
+        ttl=24h
+
+# Show Secret
+kubectl exec \
+    $(kubectl get pod -l app=app -n vault-demo -o jsonpath="{.items[0].metadata.name}") \
+    --container app -n vault-demo -- cat /vault/secrets/app-config.txt ; echo
+
+# Check DB
+$ DB_POD=$(kubectl get pod -l app=db -n vault-demo -o jsonpath="{.items[0].metadata.name}")
+$ k exec -it $DB_POD -n vault-demo -- psql -U postgres -d postgres -p 5432
+
+SELECT usename, valuntil FROM pg_user;
+```
+
+### Revoking Lease 
+```
+vault lease revoke -force -prefix lease_id=database/creds/readonly
+```
