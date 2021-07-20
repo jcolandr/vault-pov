@@ -231,5 +231,6 @@ SELECT usename, valuntil FROM pg_user;
 ```
 
 ### Revoking Lease 
+```
 vault lease revoke -force -prefix lease_id=database/creds/readonly
-
+```
