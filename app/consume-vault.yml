@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consume
+  labels:
+    app: consume
+spec:
+  selector:
+    matchLabels:
+      app: consume
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "test"
+        vault.hashicorp.com/agent-inject-secret-config.txt: "secret/data/test/config"
+        vault.hashicorp.com/agent-inject-template-config.txt: |
+          {{- with secret "secret/data/test/config" -}}
+          apikey={{ .Data.data.apikey }}
+          {{- end -}}
+      labels:
+        app: consume
+    spec:
+      serviceAccountName: test
+      containers:
+        - name: shell
+          image: centos:7
+          command:
+          - "bin/bash"
+          - "-c"
+          - "sleep 10000"
