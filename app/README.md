@@ -148,7 +148,7 @@ $ kubectl apply -f app-db.yaml
 ### Need to create this ro role
 ```
 $ DB_POD=$(kubectl get pod -l app=db -n vault-demo -o jsonpath="{.items[0].metadata.name}")
-$ k exec -it $DB_POD -n vault-demo -- psql -U postgres -d postgres -p 5432
+$ kubectl exec -it $DB_POD -n vault-demo -- psql -U postgres -d postgres -p 5432
 ```
 
 ### Create a ro user
@@ -225,12 +225,32 @@ kubectl exec \
 
 # Check DB
 $ DB_POD=$(kubectl get pod -l app=db -n vault-demo -o jsonpath="{.items[0].metadata.name}")
-$ k exec -it $DB_POD -n vault-demo -- psql -U postgres -d postgres -p 5432
+$ kubectl exec -it $DB_POD -n vault-demo -- psql -U postgres -d postgres -p 5432
 
 SELECT usename, valuntil FROM pg_user;
 ```
 
-### Revoking Lease 
+### (Optional) Revoking Lease 
+
 ```
 vault lease revoke -force -prefix lease_id=database/creds/readonly
+```
+
+### Uninstalling
+
+
+```
+# Disable db secret engine mount first..
+
+$ vault secrets disable db  
+
+# Delete deployments
+
+$ kubectl delete -f app-db.yaml                                           
+namespace "vault-demo" deleted
+serviceaccount "demo-sa" deleted
+deployment.apps "app" deleted
+deployment.apps "db" deleted
+service "db" deleted
+configmap "postgres-configuration" deleted
 ```
